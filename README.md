@@ -2,7 +2,7 @@
 
 > Lightweight, production-ready Express 404 middleware that intelligently suggests closest matching endpoints using Swagger/OpenAPI specs and Express router stack inspection.
 
-[![npm version](https://img.shields.io/badge/npm-v1.0.0-blue.svg)](https://www.npmjs.com/)
+[![npm version](https://img.shields.io/badge/npm-v1.0.1-blue.svg)](https://www.npmjs.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vitest](https://img.shields.io/badge/Tested%20with-Vitest-6E9F18.svg?logo=vitest&logoColor=white)](https://vitest.dev/)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-success.svg)](#)
