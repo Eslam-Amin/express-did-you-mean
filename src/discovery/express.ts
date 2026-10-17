@@ -1,6 +1,9 @@
 import type { Application, Router } from 'express';
 import type { HttpMethod, RouteEntry } from '../types.js';
 
+/**
+ * Internal interface representing an Express Layer in the router stack.
+ */
 interface ExpressLayer {
   name?: string;
   path?: string;
@@ -24,7 +27,17 @@ interface ExpressLayer {
 }
 
 /**
- * Extracts a readable path string from an Express layer's regexp and keys.
+ * Extracts a readable route path string from an Express layer's compiled regular expression and key placeholders.
+ * Reconstructs original parameterized formats (e.g. `^\/api\/users\/(?:([^\/]+?))\/?$` -> `/api/users/:id`).
+ *
+ * @param regexp - The compiled layer regular expression.
+ * @param keys - Array of route parameter keys extracted by `path-to-regexp`.
+ * @returns Clean, reconstructed path string with leading slash.
+ *
+ * @example
+ * ```typescript
+ * const path = extractPathFromLayerRegexp(layer.regexp, layer.keys); // '/api/v1/users/:id'
+ * ```
  */
 export function extractPathFromLayerRegexp(
   regexp?: RegExp & { fast_slash?: boolean; fast_star?: boolean },
@@ -73,7 +86,11 @@ export function extractPathFromLayerRegexp(
 }
 
 /**
- * Normalizes combined path segments into a clean route path.
+ * Normalizes combined path segments into a clean route path string.
+ *
+ * @param prefix - Base path prefix (e.g. `/api/v1`).
+ * @param subPath - Sub-route path (e.g. `/users`).
+ * @returns Combined path without duplicate slashes.
  */
 function joinPaths(prefix: string, subPath: string): string {
   if (!prefix && !subPath) return '/';
@@ -86,7 +103,11 @@ function joinPaths(prefix: string, subPath: string): string {
 }
 
 /**
- * Recursively inspects an Express router stack to harvest all registered routes.
+ * Recursively inspects an Express router stack to harvest all registered routes and their HTTP methods.
+ *
+ * @param stack - The array of Express Layer objects.
+ * @param parentPrefix - Accumulated mountpath prefix from parent routers.
+ * @param collectedRoutes - Map storing unique route paths and their set of active HTTP methods.
  */
 function traverseStack(
   stack: ExpressLayer[],
@@ -154,7 +175,17 @@ function traverseStack(
 }
 
 /**
- * Extracts all registered routes and their HTTP methods from an Express application, router, or list of sub-applications.
+ * Extracts all registered routes and their supported HTTP methods from an Express application, router, or list of sub-applications.
+ * Compatible with Express 4 (`app._router.stack`) and Express 5 (`app.router.stack`).
+ *
+ * @param appOrRouter - Express Application, Router, or array of Applications/Routers.
+ * @param subApps - Optional array of mounted Express sub-applications to inspect.
+ * @returns Array of discovered RouteEntry items.
+ *
+ * @example
+ * ```typescript
+ * const routes = extractExpressRoutes(app);
+ * ```
  */
 export function extractExpressRoutes(
   appOrRouter: Application | Router | any | Array<Application | Router | any>,
