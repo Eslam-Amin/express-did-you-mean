@@ -3,3 +3,9 @@ dist/
 coverage/
 *.log
 .DS_Store
+
+# AI and Assistant Guidelines (local-only)
+agent.md
+agents.md
+GEMINI.md
+.github/copilot-instructions.md
