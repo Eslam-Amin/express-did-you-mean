@@ -7,8 +7,17 @@ export * from './express.js';
 export * from './swagger.js';
 
 /**
- * Merges two lists of RouteEntry objects, deduplicating paths and combining methods.
- * Items in primary have priority for metadata (summary, description, source).
+ * Merges two lists of RouteEntry objects, deduplicating paths and combining HTTP methods.
+ * Items in `primary` take priority for metadata such as summary, description, and source.
+ *
+ * @param primary - Primary route list (e.g. from Swagger/OpenAPI).
+ * @param secondary - Secondary route list (e.g. from Express router stack).
+ * @returns Merged array of unique RouteEntry definitions.
+ *
+ * @example
+ * ```typescript
+ * const combined = mergeRouteEntries(swaggerRoutes, expressRoutes);
+ * ```
  */
 export function mergeRouteEntries(
   primary: RouteEntry[],
@@ -45,7 +54,16 @@ export function mergeRouteEntries(
 }
 
 /**
- * Discovers routes synchronously according to the requested strategy.
+ * Synchronously discovers routes across Swagger specs and Express router stacks according to the requested strategy.
+ *
+ * @param app - Express Application instance or Router.
+ * @param options - Middleware options containing swaggerDoc and discoveryStrategy.
+ * @returns Array of discovered RouteEntry items.
+ *
+ * @example
+ * ```typescript
+ * const routes = discoverRoutesSync(app, { swaggerDoc: spec, discoveryStrategy: 'swagger-first' });
+ * ```
  */
 export function discoverRoutesSync(
   app: Application | any,
@@ -82,7 +100,16 @@ export function discoverRoutesSync(
 }
 
 /**
- * Discovers routes asynchronously (supports remote URL Swagger specs).
+ * Asynchronously discovers routes across Swagger specs (supporting remote URLs) and Express router stacks.
+ *
+ * @param app - Express Application instance or Router.
+ * @param options - Middleware options containing swaggerDoc and discoveryStrategy.
+ * @returns Promise resolving to an array of discovered RouteEntry items.
+ *
+ * @example
+ * ```typescript
+ * const routes = await discoverRoutesAsync(app, { swaggerDoc: 'https://api.example.com/spec.json' });
+ * ```
  */
 export async function discoverRoutesAsync(
   app: Application | any,
