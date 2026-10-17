@@ -107,3 +107,46 @@ export function matchesParameterizedRoute(
 
   return true;
 }
+
+/**
+ * Calculates segment-by-segment similarity between a request path and a route template.
+ * Parameterized segments in the route pattern match any non-empty request segment with high similarity.
+ */
+export function calculateSegmentSimilarity(
+  requestPath: string,
+  routePattern: string,
+  segmentSimFn: (a: string, b: string) => number,
+  caseSensitive = false
+): number {
+  const reqSegments = splitSegments(requestPath, caseSensitive);
+  const routeCanonical = canonicalizeRoutePattern(routePattern);
+  const routeSegments = splitSegments(routeCanonical, caseSensitive);
+
+  if (reqSegments.length === 0 && routeSegments.length === 0) {
+    return 1.0;
+  }
+
+  const maxLen = Math.max(reqSegments.length, routeSegments.length);
+  if (maxLen === 0) return 1.0;
+
+  const lengthPenalty = Math.abs(reqSegments.length - routeSegments.length) / maxLen;
+
+  let totalScore = 0;
+  const minLen = Math.min(reqSegments.length, routeSegments.length);
+
+  for (let i = 0; i < minLen; i++) {
+    const rSeg = reqSegments[i];
+    const tSeg = routeSegments[i];
+
+    if (isParamSegment(tSeg)) {
+      totalScore += 0.95;
+    } else {
+      totalScore += segmentSimFn(rSeg, tSeg);
+    }
+  }
+
+  const averageSegmentScore = totalScore / maxLen;
+  const finalScore = Math.max(0, averageSegmentScore * (1 - lengthPenalty * 0.3));
+
+  return Math.min(1.0, finalScore);
+}
