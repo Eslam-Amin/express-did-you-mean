@@ -108,3 +108,129 @@ function isExcluded(path: string, exclusions?: (string | RegExp)[]): boolean {
     return false;
   });
 }
+
+/**
+ * Finds and ranks the closest matching routes for a given request.
+ */
+export function rankRoutes(
+  requestMethod: string,
+  requestPath: string,
+  routes: RouteEntry[],
+  options: RankerOptions = {}
+): RouteSuggestion[] {
+  const {
+    threshold = 0.4,
+    maxSuggestions = 3,
+    algorithm = 'hybrid',
+    caseSensitive = false,
+    excludeRoutes = [],
+    includeMethods,
+    includeMethodMismatches = true,
+  } = options;
+
+  const reqMethodUpper = (requestMethod || 'GET').toUpperCase() as HttpMethod;
+  const normReqPath = normalizePath(requestPath, caseSensitive);
+
+  const suggestions: RouteSuggestion[] = [];
+
+  for (const route of routes) {
+    if (isExcluded(route.path, excludeRoutes)) {
+      continue;
+    }
+
+    const normRoutePath = normalizePath(route.path, caseSensitive);
+    const isExactPathMatch =
+      normReqPath === normRoutePath ||
+      matchesParameterizedRoute(normReqPath, route.path, caseSensitive);
+
+    // Filter route methods if includeMethods specified
+    const availableMethods = route.methods
+      .map((m) => m.toUpperCase() as HttpMethod)
+      .filter((m) => !includeMethods || includeMethods.includes(m));
+
+    if (availableMethods.length === 0) {
+      continue;
+    }
+
+    if (isExactPathMatch) {
+      const hasMatchingMethod = availableMethods.includes(reqMethodUpper);
+
+      if (hasMatchingMethod) {
+        suggestions.push({
+          method: reqMethodUpper,
+          path: route.path,
+          score: 1.0,
+          isMethodMismatch: false,
+          summary: route.summary,
+          description: route.description,
+        });
+      } else if (includeMethodMismatches) {
+        for (const method of availableMethods) {
+          suggestions.push({
+            method,
+            path: route.path,
+            score: 1.0,
+            isMethodMismatch: true,
+            summary: route.summary,
+            description: route.description,
+          });
+        }
+      }
+      continue;
+    }
+
+    const pathSimilarity = computePathSimilarity(
+      requestPath,
+      route.path,
+      algorithm,
+      caseSensitive
+    );
+
+    if (pathSimilarity < threshold) {
+      continue;
+    }
+
+    for (const method of availableMethods) {
+      const isSameMethod = method === reqMethodUpper;
+      const score = isSameMethod
+        ? Math.min(1.0, pathSimilarity + 0.05)
+        : Math.max(0, pathSimilarity * 0.9);
+
+      if (score >= threshold) {
+        suggestions.push({
+          method,
+          path: route.path,
+          score: Math.round(score * 1000) / 1000,
+          isMethodMismatch: false,
+          summary: route.summary,
+          description: route.description,
+        });
+      }
+    }
+  }
+
+  const seen = new Set<string>();
+  const uniqueSuggestions = suggestions.filter((s) => {
+    const key = `${s.method} ${s.path}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  uniqueSuggestions.sort((a, b) => {
+    if (a.isMethodMismatch !== b.isMethodMismatch) {
+      return a.isMethodMismatch ? -1 : 1;
+    }
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    const aMethodMatch = a.method === reqMethodUpper;
+    const bMethodMatch = b.method === reqMethodUpper;
+    if (aMethodMatch !== bMethodMatch) {
+      return aMethodMatch ? -1 : 1;
+    }
+    return a.path.length - b.path.length;
+  });
+
+  return uniqueSuggestions.slice(0, maxSuggestions);
+}
