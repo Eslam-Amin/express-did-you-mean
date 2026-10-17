@@ -1,0 +1,65 @@
+{
+  "name": "express-did-you-mean",
+  "version": "1.0.0",
+  "description": "Lightweight, production-ready Express 404 middleware that suggests closest matching valid endpoints using Swagger/OpenAPI specs and Express router stack inspection.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "express",
+    "middleware",
+    "404",
+    "not-found",
+    "did-you-mean",
+    "route-suggester",
+    "fuzzy-search",
+    "openapi",
+    "swagger",
+    "levenshtein",
+    "router-inspection",
+    "typescript"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "express": ">=4.17.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.4",
+    "@types/supertest": "^6.0.2",
+    "@vitest/coverage-v8": "^3.2.7",
+    "express": "^4.21.2",
+    "supertest": "^7.0.0",
+    "tsup": "^8.3.6",
+    "typescript": "5.7.3",
+    "vitest": "^3.0.5"
+  }
+}
