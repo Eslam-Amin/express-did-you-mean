@@ -140,3 +140,46 @@ export async function parseSwaggerDoc(
 
   return [];
 }
+
+/**
+ * Synchronous variant for parsing Swagger / OpenAPI specs when input is an object or local file.
+ */
+export function parseSwaggerDocSync(input: SwaggerDocInput): RouteEntry[] {
+  if (!input) return [];
+
+  if (typeof input === 'object') {
+    return extractRoutesFromSwaggerObject(input);
+  }
+
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return extractRoutesFromSwaggerObject(parsed);
+      } catch {
+        // Fall through
+      }
+    }
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      console.warn(
+        `[express-did-you-mean] Remote Swagger URLs must be loaded asynchronously or passed as parsed JSON.`
+      );
+      return [];
+    }
+
+    const resolvedPath = path.isAbsolute(trimmed)
+      ? trimmed
+      : path.resolve(process.cwd(), trimmed);
+
+    if (fs.existsSync(resolvedPath)) {
+      const content = fs.readFileSync(resolvedPath, 'utf8');
+      const parsed = JSON.parse(content);
+      return extractRoutesFromSwaggerObject(parsed);
+    }
+  }
+
+  return [];
+}
