@@ -16,18 +16,64 @@ import {
   levenshteinSimilarity,
 } from './similarity.js';
 
+/**
+ * Options configuring the route ranking and fuzzy matching engine.
+ */
 export interface RankerOptions {
+  /**
+   * Minimum similarity threshold (0.0 to 1.0) required to include a route suggestion.
+   * @default 0.4
+   */
   threshold?: number;
+
+  /**
+   * Maximum number of suggestions to return.
+   * @default 3
+   */
   maxSuggestions?: number;
+
+  /**
+   * Similarity algorithm to use for scoring path closeness.
+   * @default 'hybrid'
+   */
   algorithm?: SimilarityAlgorithm;
+
+  /**
+   * Whether route path comparisons should be case-sensitive.
+   * @default false
+   */
   caseSensitive?: boolean;
+
+  /**
+   * Route patterns or regular expressions to exclude from suggestions.
+   */
   excludeRoutes?: (string | RegExp)[];
+
+  /**
+   * Whitelist of HTTP methods to consider for suggestions.
+   */
   includeMethods?: HttpMethod[];
+
+  /**
+   * Whether to prioritize routes that match the exact requested path but differ in HTTP method.
+   * @default true
+   */
   includeMethodMismatches?: boolean;
 }
 
 /**
- * Computes path similarity using the selected algorithm.
+ * Computes path similarity between an incoming request path and a registered route pattern.
+ *
+ * @param requestPath - Concrete path from the client request.
+ * @param routePattern - Registered route pattern template.
+ * @param algorithm - String similarity algorithm ('hybrid', 'levenshtein', 'jaro-winkler', or 'dice').
+ * @param caseSensitive - Whether path casing should be strictly evaluated.
+ * @returns Normalized similarity score from 0.0 to 1.0.
+ *
+ * @example
+ * ```typescript
+ * const score = computePathSimilarity('/api/usr', '/api/users', 'hybrid'); // ~0.88
+ * ```
  */
 export function computePathSimilarity(
   requestPath: string,
@@ -95,6 +141,10 @@ export function computePathSimilarity(
 
 /**
  * Checks if a route path should be excluded based on exclusion rules.
+ *
+ * @param path - The route path to evaluate.
+ * @param exclusions - Array of exact path strings or RegExp patterns.
+ * @returns True if the path matches any exclusion rule.
  */
 function isExcluded(path: string, exclusions?: (string | RegExp)[]): boolean {
   if (!exclusions || exclusions.length === 0) return false;
@@ -110,7 +160,19 @@ function isExcluded(path: string, exclusions?: (string | RegExp)[]): boolean {
 }
 
 /**
- * Finds and ranks the closest matching routes for a given request.
+ * Finds and ranks the closest matching routes for an unregistered request.
+ * Prioritizes exact path matches under different HTTP methods, followed by highest similarity scores.
+ *
+ * @param requestMethod - The HTTP method of the incoming request (e.g. 'GET', 'POST').
+ * @param requestPath - The requested URL path (e.g. '/api/v1/usr').
+ * @param routes - List of available RouteEntry endpoints discovered from Swagger/Express.
+ * @param options - Configuration options for threshold, limit, and algorithm.
+ * @returns Sorted array of RouteSuggestion objects meeting the threshold criteria.
+ *
+ * @example
+ * ```typescript
+ * const suggestions = rankRoutes('GET', '/api/v1/usr', routes, { maxSuggestions: 3, threshold: 0.4 });
+ * ```
  */
 export function rankRoutes(
   requestMethod: string,
