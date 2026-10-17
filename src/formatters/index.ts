@@ -1,15 +1,31 @@
 import type { Request } from 'express';
 import type { RouteSuggestion } from '../types.js';
 
+/**
+ * Standard JSON payload returned when an unregistered route triggers a 404 response.
+ */
 export interface DefaultResponsePayload {
+  /** HTTP status code (typically 404) */
   statusCode: number;
+  /** Short HTTP error status string */
   error: string;
+  /** Detailed error message including method and requested path */
   message: string;
+  /** List of top closest matching route suggestions */
   suggestions: RouteSuggestion[];
 }
 
 /**
  * Standard default JSON response formatter.
+ *
+ * @param suggestions - Array of ranked route suggestions meeting the threshold criteria.
+ * @param req - The Express Request object representing the 404 request.
+ * @returns Serialized JSON object matching the standard error structure.
+ *
+ * @example
+ * ```typescript
+ * const payload = defaultFormatResponse(suggestions, req);
+ * ```
  */
 export function defaultFormatResponse(
   suggestions: RouteSuggestion[],
@@ -24,7 +40,17 @@ export function defaultFormatResponse(
 }
 
 /**
- * Clean developer-friendly HTML error page for browser requests.
+ * Renders a clean, modern, developer-friendly HTML error page for browser requests.
+ *
+ * @param suggestions - Array of ranked route suggestions.
+ * @param req - The incoming Express Request.
+ * @returns Fully formatted HTML document string with styles and suggestion cards.
+ *
+ * @example
+ * ```typescript
+ * const html = renderHtml404(suggestions, req);
+ * res.type('html').send(html);
+ * ```
  */
 export function renderHtml404(
   suggestions: RouteSuggestion[],
