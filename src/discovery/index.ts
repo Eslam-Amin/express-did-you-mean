@@ -80,3 +80,40 @@ export function discoverRoutesSync(
 
   return expressRoutes;
 }
+
+/**
+ * Discovers routes asynchronously (supports remote URL Swagger specs).
+ */
+export async function discoverRoutesAsync(
+  app: Application | any,
+  options: DidYouMeanOptions = {}
+): Promise<RouteEntry[]> {
+  const strategy: RouteDiscoveryStrategy = options.discoveryStrategy || 'swagger-first';
+  const hasSwaggerDoc = Boolean(options.swaggerDoc);
+
+  let swaggerRoutes: RouteEntry[] = [];
+  if (hasSwaggerDoc && strategy !== 'express-only') {
+    swaggerRoutes = await parseSwaggerDoc(options.swaggerDoc!);
+  }
+
+  if (strategy === 'swagger-only') {
+    return swaggerRoutes;
+  }
+
+  const expressRoutes = extractExpressRoutes(app, options.subApps);
+
+  if (strategy === 'express-only') {
+    return expressRoutes;
+  }
+
+  if (strategy === 'combine') {
+    return mergeRouteEntries(swaggerRoutes, expressRoutes);
+  }
+
+  // Default: 'swagger-first'
+  if (swaggerRoutes.length > 0) {
+    return mergeRouteEntries(swaggerRoutes, expressRoutes);
+  }
+
+  return expressRoutes;
+}
