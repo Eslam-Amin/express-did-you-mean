@@ -40,3 +40,11 @@ export function normalizePath(path: string, caseSensitive = false): string {
 
   return cleaned;
 }
+
+/**
+ * Normalizes OpenAPI style path parameters {param} into Express-style :param.
+ */
+export function canonicalizeRoutePattern(pattern: string): string {
+  // Convert /users/{userId}/posts/{postId} -> /users/:userId/posts/:postId
+  return pattern.replace(/\{([a-zA-Z0-9_]+)\}/g, ':$1');
+}
