@@ -70,3 +70,40 @@ export function isParamSegment(segment: string): boolean {
     segment === '*'
   );
 }
+
+/**
+ * Checks whether an incoming request path matches a parameterized route pattern structurally.
+ * Example:
+ *   request: '/api/v1/users/123'
+ *   route:   '/api/v1/users/:id'
+ * Returns true if every non-param segment matches and every param segment has a corresponding value.
+ */
+export function matchesParameterizedRoute(
+  requestPath: string,
+  routePattern: string,
+  caseSensitive = false
+): boolean {
+  const reqSegments = splitSegments(requestPath, caseSensitive);
+  const routeCanonical = canonicalizeRoutePattern(routePattern);
+  const routeSegments = splitSegments(routeCanonical, caseSensitive);
+
+  if (reqSegments.length !== routeSegments.length) {
+    return false;
+  }
+
+  for (let i = 0; i < routeSegments.length; i++) {
+    const routeSeg = routeSegments[i];
+    const reqSeg = reqSegments[i];
+
+    if (isParamSegment(routeSeg)) {
+      if (!reqSeg || reqSeg.trim() === '') return false;
+      continue;
+    }
+
+    if (routeSeg !== reqSeg) {
+      return false;
+    }
+  }
+
+  return true;
+}
