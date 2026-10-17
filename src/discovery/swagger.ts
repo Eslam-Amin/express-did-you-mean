@@ -84,3 +84,59 @@ export function extractRoutesFromSwaggerObject(
 
   return routes;
 }
+
+/**
+ * Parses a Swagger / OpenAPI specification from an object, a local file path, or an HTTP(S) URL.
+ */
+export async function parseSwaggerDoc(
+  input: SwaggerDocInput
+): Promise<RouteEntry[]> {
+  if (!input) return [];
+
+  if (typeof input === 'object') {
+    return extractRoutesFromSwaggerObject(input);
+  }
+
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+
+    // Check if it is a JSON string directly
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return extractRoutesFromSwaggerObject(parsed);
+      } catch {
+        // Fall through to file path / url check
+      }
+    }
+
+    // Check if it's a URL
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      const response = await fetch(trimmed);
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch OpenAPI spec from ${trimmed}: HTTP ${response.status} ${response.statusText}`
+        );
+      }
+      const data = await response.json();
+      return extractRoutesFromSwaggerObject(data as Record<string, any>);
+    }
+
+    // Check if it's a local file path
+    const resolvedPath = path.isAbsolute(trimmed)
+      ? trimmed
+      : path.resolve(process.cwd(), trimmed);
+
+    if (fs.existsSync(resolvedPath)) {
+      const content = fs.readFileSync(resolvedPath, 'utf8');
+      const parsed = JSON.parse(content);
+      return extractRoutesFromSwaggerObject(parsed);
+    }
+
+    throw new Error(
+      `OpenAPI spec file not found or invalid input: ${input}`
+    );
+  }
+
+  return [];
+}
