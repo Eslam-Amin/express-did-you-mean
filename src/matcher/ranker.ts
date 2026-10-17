@@ -92,3 +92,19 @@ export function computePathSimilarity(
     }
   }
 }
+
+/**
+ * Checks if a route path should be excluded based on exclusion rules.
+ */
+function isExcluded(path: string, exclusions?: (string | RegExp)[]): boolean {
+  if (!exclusions || exclusions.length === 0) return false;
+  return exclusions.some((pattern) => {
+    if (typeof pattern === 'string') {
+      return path === pattern || normalizePath(path) === normalizePath(pattern);
+    }
+    if (pattern instanceof RegExp) {
+      return pattern.test(path);
+    }
+    return false;
+  });
+}
