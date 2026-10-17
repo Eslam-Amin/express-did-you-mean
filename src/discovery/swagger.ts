@@ -14,7 +14,15 @@ const VALID_HTTP_METHODS = new Set([
 ]);
 
 /**
- * Extracts route entries from an OpenAPI / Swagger document.
+ * Extracts route entries and metadata from a parsed OpenAPI 2.0 (Swagger) or OpenAPI 3.x document object.
+ *
+ * @param doc - Parsed Swagger/OpenAPI specification object.
+ * @returns Array of extracted RouteEntry definitions with paths, supported methods, and summaries.
+ *
+ * @example
+ * ```typescript
+ * const routes = extractRoutesFromSwaggerObject(specObject);
+ * ```
  */
 export function extractRoutesFromSwaggerObject(
   doc: Record<string, any>
@@ -86,7 +94,16 @@ export function extractRoutesFromSwaggerObject(
 }
 
 /**
- * Parses a Swagger / OpenAPI specification from an object, a local file path, or an HTTP(S) URL.
+ * Asynchronously parses a Swagger / OpenAPI specification from an object, a local file path, or an HTTP(S) URL.
+ *
+ * @param input - Parsed specification object, JSON string, local file path, or remote URL.
+ * @returns Promise resolving to an array of discovered RouteEntry items.
+ * @throws {Error} If a remote URL fetch fails or a specified local file does not exist.
+ *
+ * @example
+ * ```typescript
+ * const routes = await parseSwaggerDoc('https://api.example.com/openapi.json');
+ * ```
  */
 export async function parseSwaggerDoc(
   input: SwaggerDocInput
@@ -142,7 +159,15 @@ export async function parseSwaggerDoc(
 }
 
 /**
- * Synchronous variant for parsing Swagger / OpenAPI specs when input is an object or local file.
+ * Synchronous variant for parsing Swagger / OpenAPI specs when input is a parsed object or local file path.
+ *
+ * @param input - Parsed specification object, JSON string, or local file path.
+ * @returns Array of discovered RouteEntry items. Returns empty array if input is remote URL.
+ *
+ * @example
+ * ```typescript
+ * const routes = parseSwaggerDocSync('./docs/openapi.json');
+ * ```
  */
 export function parseSwaggerDocSync(input: SwaggerDocInput): RouteEntry[] {
   if (!input) return [];
