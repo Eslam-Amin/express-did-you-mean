@@ -71,3 +71,16 @@ export function extractPathFromLayerRegexp(
 
   return src;
 }
+
+/**
+ * Normalizes combined path segments into a clean route path.
+ */
+function joinPaths(prefix: string, subPath: string): string {
+  if (!prefix && !subPath) return '/';
+  if (!prefix) return subPath.startsWith('/') ? subPath : '/' + subPath;
+  if (!subPath || subPath === '/') return prefix.startsWith('/') ? prefix : '/' + prefix;
+
+  const cleanPrefix = prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;
+  const cleanSub = subPath.startsWith('/') ? subPath : '/' + subPath;
+  return `${cleanPrefix}${cleanSub}`;
+}
