@@ -1,5 +1,14 @@
 /**
- * Computes Levenshtein edit distance between two strings using an optimized O(min(m, n)) space algorithm.
+ * Computes the Levenshtein edit distance between two strings using an optimized O(min(m, n)) space algorithm.
+ *
+ * @param a - The first string to compare.
+ * @param b - The second string to compare.
+ * @returns The minimum number of single-character edits (insertions, deletions, or substitutions) required to transform string `a` into string `b`.
+ *
+ * @example
+ * ```typescript
+ * const dist = levenshteinDistance('kitten', 'sitting'); // 3
+ * ```
  */
 export function levenshteinDistance(a: string, b: string): number {
   if (a === b) return 0;
@@ -43,7 +52,16 @@ export function levenshteinDistance(a: string, b: string): number {
 }
 
 /**
- * Normalized Levenshtein similarity score between 0.0 (completely different) and 1.0 (exact match).
+ * Computes a normalized Levenshtein similarity score between 0.0 (completely different) and 1.0 (exact match).
+ *
+ * @param a - The first string to compare.
+ * @param b - The second string to compare.
+ * @returns A normalized score from 0.0 to 1.0 representing character edit closeness.
+ *
+ * @example
+ * ```typescript
+ * const score = levenshteinSimilarity('users', 'user'); // 0.8
+ * ```
  */
 export function levenshteinSimilarity(a: string, b: string): number {
   if (a === b) return 1.0;
@@ -54,7 +72,16 @@ export function levenshteinSimilarity(a: string, b: string): number {
 }
 
 /**
- * Computes Jaro similarity score between two strings (0.0 to 1.0).
+ * Computes the Jaro similarity score between two strings (0.0 to 1.0).
+ *
+ * @param s1 - The first string to compare.
+ * @param s2 - The second string to compare.
+ * @returns Jaro similarity metric based on character matches and transpositions.
+ *
+ * @example
+ * ```typescript
+ * const score = jaroSimilarity('martha', 'marhta'); // ~0.944
+ * ```
  */
 export function jaroSimilarity(s1: string, s2: string): number {
   if (s1 === s2) return 1.0;
@@ -102,8 +129,18 @@ export function jaroSimilarity(s1: string, s2: string): number {
 }
 
 /**
- * Computes Jaro-Winkler similarity score with prefix scaling (0.0 to 1.0).
- * Gives higher scores to strings that share a common prefix.
+ * Computes the Jaro-Winkler similarity score with prefix scaling (0.0 to 1.0).
+ * Gives higher scores to strings that share a common prefix of up to 4 characters.
+ *
+ * @param s1 - The first string to compare.
+ * @param s2 - The second string to compare.
+ * @param prefixScale - Scaling factor for prefix matches (default: 0.1, max 0.25).
+ * @returns Jaro-Winkler similarity score bounded between 0.0 and 1.0.
+ *
+ * @example
+ * ```typescript
+ * const score = jaroWinklerSimilarity('/api/v1/users', '/api/v1/user'); // ~0.97
+ * ```
  */
 export function jaroWinklerSimilarity(s1: string, s2: string, prefixScale = 0.1): number {
   const jaro = jaroSimilarity(s1, s2);
@@ -123,7 +160,16 @@ export function jaroWinklerSimilarity(s1: string, s2: string, prefixScale = 0.1)
 }
 
 /**
- * Sørensen-Dice coefficient similarity based on character bigrams (0.0 to 1.0).
+ * Computes the Sørensen-Dice coefficient similarity based on character bigrams (0.0 to 1.0).
+ *
+ * @param s1 - The first string to compare.
+ * @param s2 - The second string to compare.
+ * @returns Sørensen-Dice coefficient similarity score between 0.0 and 1.0.
+ *
+ * @example
+ * ```typescript
+ * const score = diceSimilarity('night', 'nacht'); // 0.25
+ * ```
  */
 export function diceSimilarity(s1: string, s2: string): number {
   if (s1 === s2) return 1.0;
