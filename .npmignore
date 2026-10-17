@@ -1,0 +1,26 @@
+# Source files
+src/
+
+# Test suites & coverage
+tests/
+coverage/
+vitest.config.ts
+
+# Examples
+examples/
+
+# Build and development configs
+tsconfig.json
+tsup.config.ts
+
+# CI / CD and GitHub configurations
+.github/
+
+# AI and contributor guideline documents
+agent.md
+agents.md
+GEMINI.md
+
+# Logs and environment
+*.log
+.DS_Store
