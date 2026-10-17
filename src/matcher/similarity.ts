@@ -121,3 +121,32 @@ export function jaroWinklerSimilarity(s1: string, s2: string, prefixScale = 0.1)
 
   return Math.min(1.0, jaro + prefix * prefixScale * (1.0 - jaro));
 }
+
+/**
+ * Sørensen-Dice coefficient similarity based on character bigrams (0.0 to 1.0).
+ */
+export function diceSimilarity(s1: string, s2: string): number {
+  if (s1 === s2) return 1.0;
+  if (s1.length < 2 || s2.length < 2) {
+    return s1 === s2 ? 1.0 : 0.0;
+  }
+
+  const s1Bigrams = new Map<string, number>();
+  for (let i = 0; i < s1.length - 1; i++) {
+    const bigram = s1.slice(i, i + 2);
+    s1Bigrams.set(bigram, (s1Bigrams.get(bigram) || 0) + 1);
+  }
+
+  let intersectionSize = 0;
+  for (let i = 0; i < s2.length - 1; i++) {
+    const bigram = s2.slice(i, i + 2);
+    const count = s1Bigrams.get(bigram) || 0;
+    if (count > 0) {
+      s1Bigrams.set(bigram, count - 1);
+      intersectionSize++;
+    }
+  }
+
+  const totalBigrams = s1.length - 1 + (s2.length - 1);
+  return (2.0 * intersectionSize) / totalBigrams;
+}
