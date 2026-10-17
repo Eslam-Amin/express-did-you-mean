@@ -152,3 +152,50 @@ function traverseStack(
     }
   }
 }
+
+/**
+ * Extracts all registered routes and their HTTP methods from an Express application, router, or list of sub-applications.
+ */
+export function extractExpressRoutes(
+  appOrRouter: Application | Router | any | Array<Application | Router | any>,
+  subApps?: Array<Application | Router | any>
+): RouteEntry[] {
+  if (!appOrRouter) return [];
+
+  const targets = Array.isArray(appOrRouter) ? [...appOrRouter] : [appOrRouter];
+  if (Array.isArray(subApps)) {
+    targets.push(...subApps);
+  }
+
+  const primary = targets[0];
+  if (primary && Array.isArray((primary as any)._subApps)) {
+    targets.push(...(primary as any)._subApps);
+  }
+
+  const collected = new Map<string, Set<HttpMethod>>();
+
+  for (const target of targets) {
+    if (!target) continue;
+    const router = target._router || target.router || target;
+    const stack = router?.stack;
+    const initialPrefix =
+      typeof target.mountpath === 'string' && target.mountpath !== '/'
+        ? target.mountpath
+        : '';
+
+    if (Array.isArray(stack)) {
+      traverseStack(stack, initialPrefix, collected);
+    }
+  }
+
+  const routes: RouteEntry[] = [];
+  for (const [routePath, methodsSet] of collected.entries()) {
+    routes.push({
+      path: routePath || '/',
+      methods: Array.from(methodsSet),
+      source: 'express',
+    });
+  }
+
+  return routes;
+}
