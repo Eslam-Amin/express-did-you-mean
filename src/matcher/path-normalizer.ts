@@ -58,3 +58,15 @@ export function splitSegments(path: string, caseSensitive = false): string[] {
   if (normalized === '/') return [];
   return normalized.split('/').filter(Boolean);
 }
+
+/**
+ * Checks if a route segment represents a parameter placeholder.
+ * E.g. ':id', ':userId(\\d+)', '{id}', '*'
+ */
+export function isParamSegment(segment: string): boolean {
+  return (
+    segment.startsWith(':') ||
+    (segment.startsWith('{') && segment.endsWith('}')) ||
+    segment === '*'
+  );
+}
