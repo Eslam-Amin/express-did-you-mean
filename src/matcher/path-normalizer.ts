@@ -48,3 +48,13 @@ export function canonicalizeRoutePattern(pattern: string): string {
   // Convert /users/{userId}/posts/{postId} -> /users/:userId/posts/:postId
   return pattern.replace(/\{([a-zA-Z0-9_]+)\}/g, ':$1');
 }
+
+/**
+ * Splits a normalized path into individual non-empty segment strings.
+ * E.g. '/api/v1/users/:id' -> ['api', 'v1', 'users', ':id']
+ */
+export function splitSegments(path: string, caseSensitive = false): string[] {
+  const normalized = normalizePath(path, caseSensitive);
+  if (normalized === '/') return [];
+  return normalized.split('/').filter(Boolean);
+}
