@@ -1,10 +1,19 @@
 /**
  * Normalizes a URL path for consistent routing comparison.
- * - Strips query strings (?key=val) and hash fragments (#section)
- * - Collapses consecutive forward slashes (e.g. //api///users -> /api/users)
- * - Trims trailing slash (unless the path is simply '/')
- * - Normalizes OpenAPI parameter brackets {param} to Express format :param
- * - Handles optional case normalization
+ * - Strips query strings (`?key=val`) and hash fragments (`#section`).
+ * - Collapses consecutive forward slashes (e.g. `//api///users` -> `/api/users`).
+ * - Trims trailing slash (unless the path is the root `/`).
+ * - Normalizes OpenAPI parameter brackets `{param}` to Express format `:param`.
+ * - Handles optional case normalization.
+ *
+ * @param path - The raw URL path string to normalize.
+ * @param caseSensitive - Whether path casing should be preserved (default: false).
+ * @returns The normalized path string.
+ *
+ * @example
+ * ```typescript
+ * normalizePath('//api///users/?page=1#top'); // '/api/users'
+ * ```
  */
 export function normalizePath(path: string, caseSensitive = false): string {
   if (!path) return '/';
@@ -42,16 +51,31 @@ export function normalizePath(path: string, caseSensitive = false): string {
 }
 
 /**
- * Normalizes OpenAPI style path parameters {param} into Express-style :param.
+ * Normalizes OpenAPI style path parameters `{param}` into Express-style `:param`.
+ *
+ * @param pattern - Route pattern containing parameters (e.g. `/users/{userId}/posts/{postId}`).
+ * @returns Canonicalized route pattern with Express `:param` placeholders.
+ *
+ * @example
+ * ```typescript
+ * canonicalizeRoutePattern('/users/{userId}'); // '/users/:userId'
+ * ```
  */
 export function canonicalizeRoutePattern(pattern: string): string {
-  // Convert /users/{userId}/posts/{postId} -> /users/:userId/posts/:postId
   return pattern.replace(/\{([a-zA-Z0-9_]+)\}/g, ':$1');
 }
 
 /**
  * Splits a normalized path into individual non-empty segment strings.
- * E.g. '/api/v1/users/:id' -> ['api', 'v1', 'users', ':id']
+ *
+ * @param path - The URL path to decompose into segments.
+ * @param caseSensitive - Whether segment casing should be preserved.
+ * @returns Array of individual path segment strings.
+ *
+ * @example
+ * ```typescript
+ * splitSegments('/api/v1/users/:id'); // ['api', 'v1', 'users', ':id']
+ * ```
  */
 export function splitSegments(path: string, caseSensitive = false): string[] {
   const normalized = normalizePath(path, caseSensitive);
@@ -60,8 +84,17 @@ export function splitSegments(path: string, caseSensitive = false): string[] {
 }
 
 /**
- * Checks if a route segment represents a parameter placeholder.
- * E.g. ':id', ':userId(\\d+)', '{id}', '*'
+ * Checks if a route segment represents a parameter or wildcard placeholder.
+ * Recognizes `:id`, `{userId}`, or wildcard `*`.
+ *
+ * @param segment - The path segment string to inspect.
+ * @returns True if the segment is a dynamic placeholder, false otherwise.
+ *
+ * @example
+ * ```typescript
+ * isParamSegment(':userId'); // true
+ * isParamSegment('users');   // false
+ * ```
  */
 export function isParamSegment(segment: string): boolean {
   return (
@@ -73,10 +106,16 @@ export function isParamSegment(segment: string): boolean {
 
 /**
  * Checks whether an incoming request path matches a parameterized route pattern structurally.
- * Example:
- *   request: '/api/v1/users/123'
- *   route:   '/api/v1/users/:id'
- * Returns true if every non-param segment matches and every param segment has a corresponding value.
+ *
+ * @param requestPath - Concrete request path (e.g. `/api/v1/users/123`).
+ * @param routePattern - Target route template (e.g. `/api/v1/users/:id`).
+ * @param caseSensitive - Whether comparison should be case-sensitive.
+ * @returns True if every non-param segment matches and every param segment has a corresponding value.
+ *
+ * @example
+ * ```typescript
+ * matchesParameterizedRoute('/api/v1/users/42', '/api/v1/users/:id'); // true
+ * ```
  */
 export function matchesParameterizedRoute(
   requestPath: string,
@@ -111,6 +150,17 @@ export function matchesParameterizedRoute(
 /**
  * Calculates segment-by-segment similarity between a request path and a route template.
  * Parameterized segments in the route pattern match any non-empty request segment with high similarity.
+ *
+ * @param requestPath - Concrete request path to evaluate.
+ * @param routePattern - Target route template.
+ * @param segmentSimFn - Underlying string similarity function for comparing individual segments.
+ * @param caseSensitive - Whether segment comparison should be case-sensitive.
+ * @returns Similarity score between 0.0 and 1.0.
+ *
+ * @example
+ * ```typescript
+ * const score = calculateSegmentSimilarity('/api/usr/42', '/api/users/:id', levenshteinSimilarity);
+ * ```
  */
 export function calculateSegmentSimilarity(
   requestPath: string,
