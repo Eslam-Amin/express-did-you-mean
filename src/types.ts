@@ -50,3 +50,17 @@ export interface RouteSuggestion {
   /** Optional description from OpenAPI spec */
   description?: string;
 }
+
+/**
+ * Available string similarity algorithms.
+ */
+export type SimilarityAlgorithm = 'levenshtein' | 'jaro-winkler' | 'dice' | 'hybrid';
+
+/**
+ * Strategy for discovering routes across the application.
+ */
+export type RouteDiscoveryStrategy =
+  | 'swagger-first'
+  | 'swagger-only'
+  | 'express-only'
+  | 'combine';
