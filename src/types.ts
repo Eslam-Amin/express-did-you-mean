@@ -64,3 +64,27 @@ export type RouteDiscoveryStrategy =
   | 'swagger-only'
   | 'express-only'
   | 'combine';
+
+/**
+ * Swagger / OpenAPI specification input.
+ * Can be a parsed JavaScript/JSON object, a local file path, or an HTTP(S) URL.
+ */
+export type SwaggerDocInput = Record<string, any> | string;
+
+/**
+ * Custom response formatting function.
+ */
+export type FormatResponseFn = (
+  suggestions: RouteSuggestion[],
+  req: Request
+) => any;
+
+/**
+ * Custom handler called when a 404 route is intercepted.
+ */
+export type OnNotFoundHandler = (
+  req: Request,
+  res: Response,
+  suggestions: RouteSuggestion[],
+  next: NextFunction
+) => void;
