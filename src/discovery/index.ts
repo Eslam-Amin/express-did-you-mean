@@ -43,3 +43,40 @@ export function mergeRouteEntries(
 
   return Array.from(map.values());
 }
+
+/**
+ * Discovers routes synchronously according to the requested strategy.
+ */
+export function discoverRoutesSync(
+  app: Application | any,
+  options: DidYouMeanOptions = {}
+): RouteEntry[] {
+  const strategy: RouteDiscoveryStrategy = options.discoveryStrategy || 'swagger-first';
+  const hasSwaggerDoc = Boolean(options.swaggerDoc);
+
+  let swaggerRoutes: RouteEntry[] = [];
+  if (hasSwaggerDoc && strategy !== 'express-only') {
+    swaggerRoutes = parseSwaggerDocSync(options.swaggerDoc!);
+  }
+
+  if (strategy === 'swagger-only') {
+    return swaggerRoutes;
+  }
+
+  const expressRoutes = extractExpressRoutes(app, options.subApps);
+
+  if (strategy === 'express-only') {
+    return expressRoutes;
+  }
+
+  if (strategy === 'combine') {
+    return mergeRouteEntries(swaggerRoutes, expressRoutes);
+  }
+
+  // Default: 'swagger-first'
+  if (swaggerRoutes.length > 0) {
+    return mergeRouteEntries(swaggerRoutes, expressRoutes);
+  }
+
+  return expressRoutes;
+}
