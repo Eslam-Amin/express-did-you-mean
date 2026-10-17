@@ -84,3 +84,71 @@ function joinPaths(prefix: string, subPath: string): string {
   const cleanSub = subPath.startsWith('/') ? subPath : '/' + subPath;
   return `${cleanPrefix}${cleanSub}`;
 }
+
+/**
+ * Recursively inspects an Express router stack to harvest all registered routes.
+ */
+function traverseStack(
+  stack: ExpressLayer[],
+  parentPrefix = '',
+  collectedRoutes: Map<string, Set<HttpMethod>>
+): void {
+  if (!Array.isArray(stack)) return;
+
+  for (const layer of stack) {
+    if (!layer) continue;
+
+    // 1. Direct Route Definition (e.g. app.get('/users', ...))
+    if (layer.route) {
+      const rawPath = layer.route.path;
+      const methodsObj = layer.route.methods || {};
+      const methods: HttpMethod[] = Object.keys(methodsObj)
+        .filter((m) => methodsObj[m] === true && m !== '_all')
+        .map((m) => m.toUpperCase() as HttpMethod);
+
+      if (methods.length === 0) continue;
+
+      const paths = Array.isArray(rawPath)
+        ? rawPath
+        : [rawPath];
+
+      for (const p of paths) {
+        let routeStr = '';
+        if (typeof p === 'string') {
+          routeStr = joinPaths(parentPrefix, p);
+        } else if (p instanceof RegExp) {
+          routeStr = joinPaths(parentPrefix, extractPathFromLayerRegexp(p));
+        } else {
+          routeStr = joinPaths(parentPrefix, '');
+        }
+
+        if (!collectedRoutes.has(routeStr)) {
+          collectedRoutes.set(routeStr, new Set());
+        }
+        const methodSet = collectedRoutes.get(routeStr)!;
+        for (const m of methods) {
+          methodSet.add(m);
+        }
+      }
+      continue;
+    }
+
+    // 2. Mounted Sub-Router (e.g. app.use('/api', apiRouter))
+    if (layer.handle && Array.isArray(layer.handle.stack)) {
+      const layerPrefix = extractPathFromLayerRegexp(layer.regexp, layer.keys);
+      const combinedPrefix = joinPaths(parentPrefix, layerPrefix);
+      traverseStack(layer.handle.stack, combinedPrefix, collectedRoutes);
+      continue;
+    }
+
+    // 3. Mounted Sub-Application (e.g. app.use('/admin', subApp))
+    if (layer.handle && layer.handle._router && Array.isArray(layer.handle._router.stack)) {
+      const mountpath = typeof layer.handle.mountpath === 'string'
+        ? layer.handle.mountpath
+        : extractPathFromLayerRegexp(layer.regexp, layer.keys);
+      const combinedPrefix = joinPaths(parentPrefix, mountpath);
+      traverseStack(layer.handle._router.stack, combinedPrefix, collectedRoutes);
+      continue;
+    }
+  }
+}
