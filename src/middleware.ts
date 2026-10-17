@@ -4,6 +4,9 @@ import { defaultFormatResponse, renderHtml404 } from './formatters/index.js';
 import { rankRoutes } from './matcher/ranker.js';
 import type { DidYouMeanOptions, RouteEntry } from './types.js';
 
+/**
+ * Extended Express RequestHandler with cache management capabilities.
+ */
 export interface DidYouMeanMiddleware extends RequestHandler {
   /**
    * Manually clears the internal route cache, forcing a re-discovery on the next request.
@@ -11,13 +14,26 @@ export interface DidYouMeanMiddleware extends RequestHandler {
   clearCache: () => void;
 
   /**
-   * Returns the currently cached routes, if any.
+   * Returns the currently cached routes, if any have been harvested.
+   *
+   * @returns Array of cached RouteEntry definitions or null if cache is empty.
    */
   getCachedRoutes: () => RouteEntry[] | null;
 }
 
 /**
- * Determines whether the middleware is enabled based on configuration and environment variables.
+ * Evaluates whether the didYouMean middleware should be active for a given request.
+ * Prioritizes functional predicates, explicit boolean toggles, and environment whitelists.
+ * Defaults to active in non-production environments (`NODE_ENV !== 'production'`).
+ *
+ * @param options - Middleware options containing enabled or enabledEnvironments.
+ * @param req - The current Express Request object.
+ * @returns True if middleware should execute; false if it should act as a no-op.
+ *
+ * @example
+ * ```typescript
+ * const active = isMiddlewareEnabled({ enabledEnvironments: ['staging'] }, req);
+ * ```
  */
 export function isMiddlewareEnabled(
   options: DidYouMeanOptions,
@@ -45,7 +61,13 @@ export function isMiddlewareEnabled(
 }
 
 /**
- * Creates an Express 404 "Did-You-Mean" middleware.
+ * Creates an Express 4/5 middleware that intercepts `404 Not Found` requests
+ * and suggests the closest matching valid endpoints using Swagger/OpenAPI specs and Express router inspection.
+ *
+ * In production environments, it behaves as a zero-overhead transparent no-op (`return next()`).
+ *
+ * @param options - Configuration options for Swagger parsing, ranking, thresholds, and formatters.
+ * @returns Express RequestHandler with `.clearCache()` and `.getCachedRoutes()` helpers.
  *
  * @example
  * ```typescript
@@ -53,7 +75,7 @@ export function isMiddlewareEnabled(
  * import { didYouMean } from 'express-did-you-mean';
  *
  * const app = express();
- * // ... routes ...
+ * // ... register routes ...
  *
  * app.use(didYouMean({
  *   swaggerDoc: swaggerSpec,
