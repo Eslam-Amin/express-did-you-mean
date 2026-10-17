@@ -32,3 +32,21 @@ export interface RouteEntry {
   /** Optional tags from Swagger/OpenAPI */
   tags?: string[];
 }
+
+/**
+ * A suggested route returned to the client when a 404 occurs.
+ */
+export interface RouteSuggestion {
+  /** The HTTP method of the suggested route */
+  method: HttpMethod;
+  /** The route path template */
+  path: string;
+  /** Fuzzy similarity score from 0.0 (no match) to 1.0 (exact match) */
+  score: number;
+  /** True if the path matches the requested route exactly or structurally, but the HTTP method differs */
+  isMethodMismatch: boolean;
+  /** Optional summary from OpenAPI spec */
+  summary?: string;
+  /** Optional description from OpenAPI spec */
+  description?: string;
+}
