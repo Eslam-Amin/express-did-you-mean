@@ -100,3 +100,24 @@ export function jaroSimilarity(s1: string, s2: string): number {
     3
   );
 }
+
+/**
+ * Computes Jaro-Winkler similarity score with prefix scaling (0.0 to 1.0).
+ * Gives higher scores to strings that share a common prefix.
+ */
+export function jaroWinklerSimilarity(s1: string, s2: string, prefixScale = 0.1): number {
+  const jaro = jaroSimilarity(s1, s2);
+  if (jaro === 0 || jaro === 1.0) return jaro;
+
+  let prefix = 0;
+  const maxPrefix = Math.min(4, Math.min(s1.length, s2.length));
+  for (let i = 0; i < maxPrefix; i++) {
+    if (s1[i] === s2[i]) {
+      prefix++;
+    } else {
+      break;
+    }
+  }
+
+  return Math.min(1.0, jaro + prefix * prefixScale * (1.0 - jaro));
+}
