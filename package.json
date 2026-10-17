@@ -38,7 +38,15 @@
     "router-inspection",
     "typescript"
   ],
-  "author": "Antigravity",
+  "author": "Eslam Amin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eslam-Amin/express-did-you-mean.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Eslam-Amin/express-did-you-mean/issues"
+  },
+  "homepage": "https://github.com/Eslam-Amin/express-did-you-mean#readme",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
