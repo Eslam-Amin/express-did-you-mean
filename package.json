@@ -1,6 +1,6 @@
 {
   "name": "express-did-you-mean",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lightweight, production-ready Express 404 middleware that suggests closest matching valid endpoints using Swagger/OpenAPI specs and Express router stack inspection.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
