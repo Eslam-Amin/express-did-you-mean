@@ -325,7 +325,7 @@ npm run test:coverage
 
 ## License
 
-MIT © [Antigravity](https://github.com/)
+MIT © [Eslam Amin](https://github.com/Eslam-Amin)
 
 ---
 
